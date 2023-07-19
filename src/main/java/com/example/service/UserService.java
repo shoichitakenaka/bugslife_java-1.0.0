@@ -5,6 +5,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+
 
 import com.example.form.UserSearchForm;
 import com.example.model.DeletedUser;
@@ -14,6 +17,8 @@ import com.example.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -32,7 +37,12 @@ public class UserService {
 	@Autowired
 	private DeletedUserRepository deletedUserRepository;
 
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+
 	PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
 
 	public List<User> findAll() {
 		return userRepository.findAll();
@@ -75,23 +85,55 @@ public class UserService {
 		return userRepository.findByEmail(email);
 	}
 
+	// @SuppressWarnings("unchecked")
+	// public List<User> search(UserSearchForm form, boolean isAdmin) {
+	// String role = isAdmin ? "ADMIN" : "USER";
+	// if (form.getName() != null && form.getName() != "") {
+	// String sql = "SELECT * FROM users WHERE name = '" + form.getName() + "'";
+	// if (!isAdmin) {
+	// sql += " AND role = '" + role + "'";
+	// }
+	// return entityManager.createNativeQuery(sql, User.class)
+	// .getResultList();
+	// }
+	// if (!isAdmin) {
+	// return userRepository.findByRole(role);
+	// } else {
+	// return userRepository.findAll();
+	// }
+	// }
 	@SuppressWarnings("unchecked")
 	public List<User> search(UserSearchForm form, boolean isAdmin) {
 		String role = isAdmin ? "ADMIN" : "USER";
-		if (form.getName() != null && form.getName() != "") {
-			String sql = "SELECT * FROM users WHERE name = '" + form.getName() + "'";
+		String sql;
+		List<Object> params = new ArrayList<>();
+
+		if (form.getName() != null && !form.getName().isEmpty()) {
+			sql = "SELECT * FROM users WHERE name = ?";
+			params.add(form.getName());
 			if (!isAdmin) {
-				sql += " AND role = '" + role + "'";
+				sql += " AND role = ?";
+				params.add(role);
 			}
-			return entityManager.createNativeQuery(sql, User.class)
-					.getResultList();
-		}
-		if (!isAdmin) {
-			return userRepository.findByRole(role);
 		} else {
-			return userRepository.findAll();
+			if (!isAdmin) {
+				sql = "SELECT * FROM users WHERE role = ?";
+				params.add(role);
+			} else {
+				sql = "SELECT * FROM users";
+			}
 		}
+
+		return jdbcTemplate.query(sql, params.toArray(), userRowMapper);
 	}
+
+	private RowMapper<User> userRowMapper = (rs, rowNum) -> {
+		User user = new User();
+		user.setId(rs.getLong("id"));
+		user.setName(rs.getString("name"));
+		user.setRole(rs.getString("role"));
+		return user;
+	};
 
 	public boolean isAdmin(Authentication authentication) {
 		Stream<String> userRole = authentication.getAuthorities().stream()
