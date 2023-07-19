@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+
 
 import com.example.form.UserSearchForm;
 import com.example.model.DeletedUser;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 
 @Service
 @Transactional(readOnly = true)
@@ -34,8 +37,12 @@ public class UserService {
 	@Autowired
 	private DeletedUserRepository deletedUserRepository;
 
+
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+
+	PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
 
 	public List<User> findAll() {
 		return userRepository.findAll();
@@ -53,7 +60,8 @@ public class UserService {
 		/**
 		 * パスワードをjavaの暗号化方式を付与する
 		 */
-		entity.setPassword("{noop}" + entity.getPassword());
+		// entity.setPassword("{noop}" + entity.getPassword());
+		entity.setPassword(passwordEncoder.encode(entity.getPassword()));
 		return userRepository.save(entity);
 	}
 
