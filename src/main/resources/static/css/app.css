@@ -11,8 +11,10 @@
 
 /* 詳細 */
 span.font-impact {
-  font-family: "Impact";
-  font-size: small;
+  /* font-family: "Impact"; */
+  font-size: medium;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 a.btn {
@@ -32,20 +34,14 @@ a.btn-link {
 /* PC */
 .app-show-container {
   width: 100%;
+  white-space: nowrap;
 }
 
 /* タブレット */
 @media (max-width: 768px) { 
   /* 一覧 */
   .for-tablet {
-    display: none;
-  }
-  .app-show-container {
-    width: 1500px;
-    height: 3000px;
-  }
-  span.font-impact {
-    font-size: x-large;
+    display: inline;
   }
 }
 
@@ -53,13 +49,6 @@ a.btn-link {
 @media (max-device-width: 500px) {
   /* 一覧 */
   .for-pc.for-tablet {
-    display: none;
-  }
-  
-  .app-show-container {
-    width: 1500px;
-  }
-  span.font-impact {
-    font-size: xx-large;
+    display: inline;
   }
 }
