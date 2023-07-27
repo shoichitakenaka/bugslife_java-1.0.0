@@ -2,6 +2,10 @@
 .app-table {
   table-layout: fixed;
 }
+.form-control {
+  height: 40px; 
+  width: 100%;
+}
 
 .text-overflow {
   white-space: nowrap;
