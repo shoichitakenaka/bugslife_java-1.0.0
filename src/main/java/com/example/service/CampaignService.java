@@ -113,16 +113,46 @@ public class CampaignService {
 	 */
 	@Transactional(readOnly = false, rollbackFor = RuntimeException.class)
 	public void bulkStatusUpdate(List<Long> idList, CampaignStatus nexStatus) throws Exception {
+		// try {
+		// idList.forEach(id -> {
+		// Campaign campaign = campaignRepository.findById(id).get();
+		// // 更新前後のステータスが同じ場合はエラー
+		// if (nexStatus.getId() == campaign.getStatus().getId()) {
+		// throw new RuntimeException(campaign.getName() +
+		// "にステータスの変更がないため、ステータスの一括更新に失敗しました。");
+		// }
+		// });
+		// idList.forEach(id -> {
+		// Campaign campaign = campaignRepository.findById(id).get();
+		// campaign.setStatus(nexStatus);
+		// campaignRepository.save(campaign);
+		// });
+		// } catch (RuntimeException e) {
+		// throw new Exception(e.getMessage());
+		// }
+		boolean allStatusMatch = true; // フラグを初期化
+
 		try {
-			idList.forEach(id -> {
+			for (Long id : idList) {
 				Campaign campaign = campaignRepository.findById(id).get();
-				// 更新前後のステータスが同じ場合はエラー
+				// 更新前後のステータスが同じ場合はフラグを false にしてループを終了
 				if (nexStatus.getId() == campaign.getStatus().getId()) {
-					throw new RuntimeException(campaign.getName() + "にステータスの変更がないため、ステータスの一括更新に失敗しました。");
+					allStatusMatch = false;
+					break;
 				}
-				campaign.setStatus(nexStatus);
-				campaignRepository.save(campaign);
-			});
+			}
+
+			if (allStatusMatch) {
+				// すべてのステータスが一致しない場合のみ、すべてのステータスを更新
+				for (Long id : idList) {
+					Campaign campaign = campaignRepository.findById(id).get();
+					campaign.setStatus(nexStatus);
+					campaignRepository.save(campaign);
+				}
+			} else {
+				// 一つでも一致するステータスがある場合はエラーをスロー
+				throw new RuntimeException("ステータスの変更がないため、ステータスの一括更新に失敗しました。");
+			}
 		} catch (RuntimeException e) {
 			throw new Exception(e.getMessage());
 		}
