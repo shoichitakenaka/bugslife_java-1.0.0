@@ -41,6 +41,7 @@ public class Campaign extends TimeEntity implements Serializable {
 	private String name;
 
 	@Column(name = "code", nullable = false)
+	@NotEmpty(message = "キャンペーンコードを入力してください。")
 	private String code;
 
 	@Column(name = "from_date", nullable = false)
