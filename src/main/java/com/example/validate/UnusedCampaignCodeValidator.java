@@ -54,7 +54,7 @@ public class UnusedCampaignCodeValidator implements ConstraintValidator<UnusedCa
 
 		// 登録済みのキャンペーンが存在しない場合は重複チェックを行わない
 		// かつ画面で入力したキャンペーンのIDとDBから取得したキャンペーンのIDが一致する場合は重複チェックを行わない
-		if (campaign == null) {
+		if (campaign == null || campaign.getId().equals(id)) {
 			return true;
 		}
 		context.disableDefaultConstraintViolation();
