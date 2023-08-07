@@ -50,7 +50,7 @@ $(document).ready(function () {
   }
 
   function isPatternValid(code) {
-    let pattern = /^([A-Z]{3}[0-9]{3})$/;
+    let pattern = /^([A-Z]{3})-([0-9]{3})$/;
     return pattern.test(code);
   }
 });
