@@ -3,12 +3,12 @@ $(document).ready(function () {
   let action = document.getElementById("action").getAttribute("val");
 
   $.ajax({
-    url: "/api/category/" + categoryId,
+    url: "/api/categories/" + categoryId,
     type: "GET",
     dataType: "json",
   })
     .done(function (data) {
-      var categoryProducts = data;
+      var categoryProducts = data.categoryProducts;
       // チェックボックスにチェックを入れる処理
       categoryProducts.forEach(function (categoryProduct) {
         $("#checkbox-" + categoryProduct.productId).prop("checked", true);
@@ -16,7 +16,7 @@ $(document).ready(function () {
     })
     .fail(function () {
       // APIコールが失敗した場合の処理
-      console.log("APIコールが失敗しました。");
+      $("#error-message").text("APIコールが失敗しました。").show().fadeOut(3000);
     });
 
   $("#update-button").click(function () {
@@ -42,7 +42,7 @@ $(document).ready(function () {
       type: "POST",
       dataType: "text",
       contentType: "application/json",
-      data: postData,
+      data: JSON.stringify(postData),
     }).done(function (data) {
       $("#success-message").text(data).show().fadeOut(3000);
     });
