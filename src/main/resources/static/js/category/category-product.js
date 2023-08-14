@@ -27,7 +27,7 @@ $(document).ready(function () {
       .get();
 
     // 作成更新時に紐付けが存在しない場合はスキップ
-    if (action == "true") {
+    if (action === "false") {
       if (!validation(checkedIds)) {
         return false;
       }
@@ -49,7 +49,7 @@ $(document).ready(function () {
   });
 
   validation = function (checkedIds) {
-    if (checkedIds.length == 0) {
+    if (checkedIds.length === 0) {
       $("#error-message")
         .text(
           "商品を選択して更新か、不要な場合はカテゴリー一覧を選択して下さい。"
