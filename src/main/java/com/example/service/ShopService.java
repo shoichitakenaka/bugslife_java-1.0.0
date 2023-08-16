@@ -1,5 +1,7 @@
 package com.example.service;
 
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,11 @@ public class ShopService {
 	}
 
 	public List<Shop> findAll(Shop probe) {
-		return shopRepository.findAll(Example.of(probe));
+		ExampleMatcher matcher = ExampleMatcher.matching()
+				.withIgnoreCase()
+				.withStringMatcher(StringMatcher.CONTAINING);
+
+		return shopRepository.findAll(Example.of(probe, matcher));
 	}
 
 	public Optional<Shop> findOne(Long id) {
