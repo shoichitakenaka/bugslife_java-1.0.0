@@ -38,7 +38,6 @@ public class ProductService {
 	@Autowired
 	private CategoryProductRepository categoryProductRepository;
 
-
 	public List<Product> findAll() {
 		return productRepository.findAll();
 	}
@@ -67,19 +66,18 @@ public class ProductService {
 		Join<CategoryProduct, Category> categoryJoin = categoryProductJoin.join("category");
 
 		query.multiselect(
-			root.get("id"),
-			root.get("code"),
-			root.get("name"),
-			root.get("weight"),
-			root.get("height"),
-			root.get("price"),
-			categoryJoin.get("name").alias("categoryName")
-		).where(builder.equal(root.get("shopId"), shopId));
+				root.get("id"),
+				root.get("code"),
+				root.get("name"),
+				root.get("weight"),
+				root.get("height"),
+				root.get("price"),
+				categoryJoin.get("name").alias("categoryName")).where(builder.equal(root.get("shopId"), shopId));
 
 		// formの値を元に検索条件を設定する
 		if (!StringUtils.isEmpty(form.getName())) {
 			// name で部分一致検索
-			query.where(builder.like(root.get("name"), "%" + form.getName() + "%"));
+			query.where(builder.like(builder.lower(root.get("name")), "%" + form.getName().toLowerCase() + "%"));
 		}
 
 		if (!StringUtils.isEmpty(form.getCode())) {
@@ -116,13 +114,16 @@ public class ProductService {
 
 	/**
 	 * ProductFormの内容を元に商品情報を保存する
+	 * 
 	 * @param entity
 	 * @return
 	 */
 	@Transactional(readOnly = false)
 	public Product save(ProductForm entity) {
 		// 紐づくカテゴリを事前に取得
-		List<CategoryProduct> categoryProducts = entity.getId() != null ? categoryProductRepository.findByProductId(entity.getId()) : new ArrayList<>();
+		List<CategoryProduct> categoryProducts = entity.getId() != null
+				? categoryProductRepository.findByProductId(entity.getId())
+				: new ArrayList<>();
 
 		Product product = new Product(entity);
 		productRepository.save(product);
