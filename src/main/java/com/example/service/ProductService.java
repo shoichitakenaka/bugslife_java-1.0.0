@@ -74,9 +74,11 @@ public class ProductService {
 				root.get("weight"),
 				root.get("height"),
 				root.get("price"),
-				builder.coalesce(categoryJoin.get("name"), "Unknown Category").alias("categoryName")))
+				builder.coalesce(
+						builder.function("GROUP_CONCAT", String.class, categoryJoin.get("name"), builder.literal(", ")),
+						"Unknown Category").alias("categoryName")))
 				.where(builder.equal(root.get("shopId"), shopId))
-				.distinct(true)
+				.distinct(false)
 				.groupBy(root.get("id"));
 
 		// formの値を元に検索条件を設定する
