@@ -67,7 +67,7 @@ public class ProductService {
 		Join<Product, CategoryProduct> categoryProductJoin = root.joinList("categoryProducts", JoinType.LEFT);
 		Join<CategoryProduct, Category> categoryJoin = categoryProductJoin.join("category", JoinType.LEFT);
 
-		query.select(builder.construct(ProductWithCategoryName.class,
+		query.multiselect(
 				root.get("id"),
 				root.get("code"),
 				root.get("name"),
@@ -76,7 +76,8 @@ public class ProductService {
 				root.get("price"),
 				builder.coalesce(
 						builder.function("GROUP_CONCAT", String.class, categoryJoin.get("name"), builder.literal(", ")),
-						"Unknown Category").alias("categoryName")))
+						"Unknown Category").alias("categoryName"))
+				.where(builder.equal(root.get("shopId"), shopId))
 				.groupBy(root.get("id"));
 
 		// formの値を元に検索条件を設定する
@@ -91,6 +92,11 @@ public class ProductService {
 		}
 
 		if (form.getCategories() != null && form.getCategories().size() > 0) {
+			for (Long categoryId : form.getCategories()) {
+				Join<Product, CategoryProduct> categoryProductJoin2 = root.joinList("categoryProducts", JoinType.LEFT);
+				Join<CategoryProduct, Category> categoryJoin2 = categoryProductJoin2.join("category", JoinType.LEFT);
+				predicate = builder.and(predicate, builder.equal(categoryJoin2.get("id"), categoryId));
+			}
 			predicate = builder.and(predicate, categoryJoin.get("id").in(form.getCategories()));
 		}
 
