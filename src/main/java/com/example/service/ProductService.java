@@ -92,6 +92,11 @@ public class ProductService {
 		}
 
 		if (form.getCategories() != null && form.getCategories().size() > 0) {
+			for (Long categoryId : form.getCategories()) {
+				Join<Product, CategoryProduct> categoryProductJoin2 = root.joinList("categoryProducts", JoinType.LEFT);
+				Join<CategoryProduct, Category> categoryJoin2 = categoryProductJoin2.join("category", JoinType.LEFT);
+				predicate = builder.and(predicate, builder.equal(categoryJoin2.get("id"), categoryId));
+			}
 			predicate = builder.and(predicate, categoryJoin.get("id").in(form.getCategories()));
 		}
 
