@@ -1,22 +1,38 @@
 package com.example.service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.Types;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.constants.TaxType;
 import com.example.enums.OrderStatus;
 import com.example.enums.PaymentStatus;
 import com.example.form.OrderForm;
 import com.example.model.Order;
+import com.example.model.OrderDelivery;
 import com.example.model.OrderPayment;
 import com.example.model.OrderProduct;
+import com.example.model.OrderShipping;
+import com.example.model.OrderShippingData;
+import com.example.repository.OrderDeliveryRepository;
 import com.example.repository.OrderRepository;
 import com.example.repository.ProductRepository;
-
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.Optional;
-import java.util.ArrayList;
+import com.example.validate.OrderShippingValidator;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,7 +42,21 @@ public class OrderService {
 	private OrderRepository orderRepository;
 
 	@Autowired
+	private OrderDeliveryRepository orderDeliveryRepository;
+
+	@Autowired
 	private ProductRepository productRepository;
+
+	private final NamedParameterJdbcTemplate jdbcTemplate;
+
+	public OrderService(NamedParameterJdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
+	}
+
+	@Transactional(readOnly = false)
+	public OrderDelivery save(OrderDelivery entity) {
+		return orderDeliveryRepository.save(entity);
+	}
 
 	public List<Order> findAll() {
 		return orderRepository.findAll();
@@ -142,5 +172,134 @@ public class OrderService {
 		order.setPaymentStatus(paymentStatus);
 		orderRepository.save(order);
 	}
+
+	/**
+	 * CSVインポート処理
+	 *
+	 * @param file
+	 * @throws IOException
+	 */
+	@Transactional
+	public List<OrderShipping> importCSV(MultipartFile file) throws IOException, NumberFormatException {
+		try (BufferedReader br = new BufferedReader(
+				new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+			String line = br.readLine(); // 1行目はヘッダーなので読み飛ばす
+			List<OrderShipping> orderShippingList = new ArrayList<>();
+			List<String> validationError = new ArrayList<>();
+			System.out.println("CSVファイルのインポートが完了。");
+
+			int csvLine = 1;
+			while ((line = br.readLine()) != null) {
+				try {
+					final String[] split = line.replace("\"", "").split(",");
+					final OrderShipping orderShipping = new OrderShipping(Integer.parseInt(split[0]), split[1],
+							LocalDate.parse(split[2]), LocalDate.parse(split[3]), split[4], null, true);
+					orderShippingList.add(orderShipping);
+
+				} catch (NumberFormatException | DateTimeParseException e) {
+					validationError.add(csvLine + "行目が不正です");
+					// throw new OrderShippingValidator(validationError);
+				}
+				csvLine++;
+			}
+			int count = 1;
+			for (OrderShipping orderShipping : orderShippingList) {
+				// ここにvalidationする処理を書く
+				if (orderShipping.getOrderId() == null || !(orderShipping.getOrderId() instanceof Integer)) {
+					validationError.add(count + "行目のorderIdが不正です。");
+				}
+				if (orderShipping.getShippingCode() == null
+						|| !(orderShipping.getShippingCode() instanceof String)) {
+					validationError.add(count + "行目shippingCodeが不正です。");
+				}
+				if (orderShipping.getShippingDate() == null
+						|| !(orderShipping.getShippingDate() instanceof LocalDate)) {
+					validationError.add(count + "行目shippingDateが不正です。");
+				}
+				if (orderShipping.getDeliveryDate() == null
+						|| !(orderShipping.getDeliveryDate() instanceof LocalDate)) {
+					validationError.add(count + "行目deliveryDateが不正です。");
+				}
+				if (orderShipping.getDeliveryTimeZone() == null
+						|| !(orderShipping.getDeliveryTimeZone() instanceof String)) {
+					validationError.add(count + "行目deliveryTimeZoneが不正です。");
+				}
+				count++;
+			}
+			if (!validationError.isEmpty()) {
+				throw new OrderShippingValidator(validationError);
+			}
+			return orderShippingList;
+		} catch (IOException e) {
+			throw new RuntimeException("ファイルが読み込めません", e);
+		}
+	}
+
+	/**
+	 * 一括更新処理実行
+	 *
+	 * @param orderDeliveries
+	 */
+	public OrderShippingData OrderSave(OrderShippingData orderShippingData) throws Exception {
+		// String sql = "INSERT INTO order_delivery (shipping_code, shipping_date,
+		// delivery_date, delivery_time_zone)"
+		// + " VALUES(:shipping_code, :shipping_date, :delivery_date,
+		// :delivery_time_zone)";
+		// return jdbcTemplate.batchUpdate(sql,
+		// orderDeliveries.stream()
+		// .map(o -> new MapSqlParameterSource()
+		// .addValue("shipping_code", o.getShippingCode(), Types.VARCHAR)
+		// .addValue("shipping_date", o.getShippingDate(), Types.DATE)
+		// .addValue("delivery_date", o.getDeliveryDate(), Types.DATE)
+		// .addValue("delivery_time_zone", o.getDeliveryTimezone(), Types.VARCHAR))
+		// .toArray(SqlParameterSource[]::new));
+		int count = 0;
+		List<OrderShipping> orderShippingList = orderShippingData.getOrderShippingList();
+		try {
+			for (OrderShipping orderShipping : orderShippingList) {
+				System.out.println("CSVファイルのインポートが完了。");
+				Order order = new Order();
+				order.setPaymentStatus("発送完了");
+				order.setId((long)orderShipping.getOrderId());
+				orderRepository.save(order);
+				OrderDelivery orderDelivery = new OrderDelivery();
+				orderDelivery.setId((long)orderShipping.getOrderId());
+				orderDelivery.setShippingCode(orderShipping.getShippingCode());
+				orderDelivery.setShippingDate(orderShipping.getShippingDate());
+				orderDelivery.setDeliveryDate(orderShipping.getDeliveryDate());
+				orderDelivery.setDeliveryTimeZone(orderShipping.getDeliveryTimeZone());
+				orderDeliveryRepository.save(orderDelivery);
+				orderShippingList.get(count).setUploadStatus("success");
+				count++;
+			}
+			orderShippingData.setOrderShipping(orderShippingList);
+		} catch (Exception e) {
+			// TODO: handle exception
+			orderShippingList.get(count).setUploadStatus("error");
+		}
+		return orderShippingData;
+	}
+
+	// /**
+	// * 一括ステータス更新処理 更新前にステータスをチェックする
+	// *
+	// * @param idList 更新対象IDリスト
+	// * @param nexStatus 更新後ステータス
+	// * @throws Exception
+	// */
+	// @Transactional(readOnly = false, rollbackFor = RuntimeException.class)
+	// public void bulkStatusUpdate(List<Long> idList, OrderStatus nexStatus) throws
+	// Exception {
+	// try {
+
+	// for (Long id : idList) {
+	// Campaign campaign = campaignRepository.findById(id).get();
+	// OrderShipping.setStatus(nexStatus);
+	// orderRepository.save(campaign);
+	// }
+	// } catch (RuntimeException e) {
+	// throw new Exception(e.getMessage());
+	// }
+	// }
 
 }
