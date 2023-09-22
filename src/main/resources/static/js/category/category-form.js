@@ -11,7 +11,6 @@ $(document).ready(function () {
     const codeError = document.getElementById("codeError");
     const nameError = document.getElementById("nameError");
     const displayError = document.getElementById("displayError");
-    const descriptionError = document.getElementById("descriptionError");
     $(".form-control").each(function () {
       let id = $(this).attr("id");
       // codeのバリデーション
@@ -52,19 +51,6 @@ $(document).ready(function () {
         } else {
           $(this).removeClass("is-invalid");
           displayError.textContent = "";
-        }
-      }
-
-      // descriptionのバリデーション
-      if (id === "description") {
-        let description = $(this).val();
-        if (description.length > 300) {
-          $(this).addClass("is-invalid");
-          isValid = false;
-          descriptionError.textContent = "300字以内で入力してください。";
-        } else {
-          $(this).removeClass("is-invalid");
-          descriptionError.textContent = "";
         }
       }
     });
