@@ -8,6 +8,10 @@ $(document).ready(function () {
 
   function validateForm() {
     var isValid = true;
+    const codeError = document.getElementById("codeError");
+    const nameError = document.getElementById("nameError");
+    const displayError = document.getElementById("displayError");
+
     $(".form-control").each(function () {
       let id = $(this).attr("id");
 
@@ -17,8 +21,11 @@ $(document).ready(function () {
         if (code === "" || !isPatternValid(code)) {
           $(this).addClass("is-invalid");
           isValid = false;
+          
+          codeError.textContent = "半角大文字アルファベット3文字 + ハイフン + 半角数字3文字を入力してください。";
         } else {
           $(this).removeClass("is-invalid");
+          codeError.textContent = "";
         }
         console.log(!isPatternValid(code));
       }
@@ -26,11 +33,18 @@ $(document).ready(function () {
       // nameのバリデーション
       if (id === "name") {
         let name = $(this).val();
-        if (name === "" || name.length >= 20) {
+        if (name === "") {
           $(this).addClass("is-invalid");
           isValid = false;
+          nameError.textContent = "名前を入力してください。";
+        } else if (name.length > 20) {
+          $(this).addClass("is-invalid");
+          isValid = false;
+          nameError.textContent = "名前は20字以内で入力してください。";
         } else {
           $(this).removeClass("is-invalid");
+          nameError.textContent = "";
+
         }
         console.log(name.length);
       }
@@ -41,8 +55,12 @@ $(document).ready(function () {
         if (displayOrder === "" || displayOrder < 0 || displayOrder > 999) {
           $(this).addClass("is-invalid");
           isValid = false;
+          displayError.textContent = "数字を入力してください。";
+
         } else {
           $(this).removeClass("is-invalid");
+          displayError.textContent = "";
+
         }
       }
     });

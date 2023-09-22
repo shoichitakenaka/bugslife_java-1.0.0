@@ -5,13 +5,13 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import groovyjarjarantlr4.v4.parse.ANTLRParser.parserRule_return;
-
+// htmlへデータを渡すためのクラス
 @Component
 public class OrderShippingData {
 
 	private List<OrderShipping> orderShippingList = new ArrayList<OrderShipping>();
 
+	// ゲッターとセッター
 	public List<OrderShipping> getOrderShippingList() {
 		return orderShippingList;
 	}

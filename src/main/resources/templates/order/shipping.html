@@ -55,7 +55,7 @@
       <!-- チェックを入れたデータのみ出荷済みに更新する -->
       <form
         th:action="@{/orders/shipping}"
-        th:method="'put'"
+        th:method="put"
         th:object="${orderShippingData}"
       >
         <button type="submit" class="btn btn-success">出荷情報更新</button>
@@ -128,7 +128,11 @@
                   th:if="${orderShipping.uploadStatus == 'success'}"
                   >成功</span
                 >
-                <span class="badge text-bg-info" th:unless="${orderShipping.uploadStatus == 'error' or orderShipping.uploadStatus == 'success'}">未更新</span>
+                <span
+                  class="badge text-bg-info"
+                  th:unless="${orderShipping.uploadStatus == 'error' or orderShipping.uploadStatus == 'success'}"
+                  >未更新</span
+                >
               </td>
             </tr>
           </tbody>

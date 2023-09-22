@@ -13,14 +13,17 @@
       <label for="code">コード</label>
       <input id="code" name="code" type="text" class="form-control" th:field="*{code}" />
     </div>
+    <span id="codeError" class="error" style="color: red;"></span>
     <div class="form-group">
       <label for="name">名前</label>
       <input id="name" name="name" type="text" class="form-control" th:field="*{name}" />
     </div>
+    <span id="nameError" class="error" style="color: red;"></span>
     <div class="form-group">
       <label for="display_order">表示順</label>
       <input id="display_order" name="display_order" type="number" class="form-control" th:field="*{displayOrder}" />
     </div>
+    <span id="displayError" class="error" style="color: red;"></span>
     <div class="form-group">
       <label>説明</label>
       <textarea class="form-control" maxlength="300"></textarea>

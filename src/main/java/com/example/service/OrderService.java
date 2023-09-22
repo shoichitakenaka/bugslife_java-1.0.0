@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -12,9 +11,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,12 +42,6 @@ public class OrderService {
 
 	@Autowired
 	private ProductRepository productRepository;
-
-	private final NamedParameterJdbcTemplate jdbcTemplate;
-
-	public OrderService(NamedParameterJdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
 
 	@Transactional(readOnly = false)
 	public OrderDelivery save(OrderDelivery entity) {
@@ -179,15 +169,16 @@ public class OrderService {
 	 * @param file
 	 * @throws IOException
 	 */
-	@Transactional
+	@Transactional(readOnly = false)
 	public List<OrderShipping> importCSV(MultipartFile file) throws IOException, NumberFormatException {
 		try (BufferedReader br = new BufferedReader(
 				new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 			String line = br.readLine(); // 1行目はヘッダーなので読み飛ばす
+			// CSVを受け取るリスト
 			List<OrderShipping> orderShippingList = new ArrayList<>();
+			// バリデーションエラーを受け取るリスト
 			List<String> validationError = new ArrayList<>();
-			System.out.println("CSVファイルのインポートが完了。");
-
+			// エラー行数表示のカウンター
 			int csvLine = 1;
 			while ((line = br.readLine()) != null) {
 				try {
@@ -197,14 +188,14 @@ public class OrderService {
 					orderShippingList.add(orderShipping);
 
 				} catch (NumberFormatException | DateTimeParseException e) {
+					// エラーがあった場合、エラーを受け取る
 					validationError.add(csvLine + "行目が不正です");
-					// throw new OrderShippingValidator(validationError);
 				}
 				csvLine++;
 			}
 			int count = 1;
 			for (OrderShipping orderShipping : orderShippingList) {
-				// ここにvalidationする処理を書く
+				// validation処理 keyに値があるかチェック
 				if (orderShipping.getOrderId() == null || !(orderShipping.getOrderId() instanceof Integer)) {
 					validationError.add(count + "行目のorderIdが不正です。");
 				}
@@ -236,70 +227,51 @@ public class OrderService {
 	}
 
 	/**
-	 * 一括更新処理実行
+	 * CSVの一括更新処理実行
 	 *
 	 * @param orderDeliveries
 	 */
+	@Transactional(readOnly = false)
 	public OrderShippingData OrderSave(OrderShippingData orderShippingData) throws Exception {
-		// String sql = "INSERT INTO order_delivery (shipping_code, shipping_date,
-		// delivery_date, delivery_time_zone)"
-		// + " VALUES(:shipping_code, :shipping_date, :delivery_date,
-		// :delivery_time_zone)";
-		// return jdbcTemplate.batchUpdate(sql,
-		// orderDeliveries.stream()
-		// .map(o -> new MapSqlParameterSource()
-		// .addValue("shipping_code", o.getShippingCode(), Types.VARCHAR)
-		// .addValue("shipping_date", o.getShippingDate(), Types.DATE)
-		// .addValue("delivery_date", o.getDeliveryDate(), Types.DATE)
-		// .addValue("delivery_time_zone", o.getDeliveryTimezone(), Types.VARCHAR))
-		// .toArray(SqlParameterSource[]::new));
+		// CSVの行数カウンター
 		int count = 0;
+		// CSVのデータを取得
 		List<OrderShipping> orderShippingList = orderShippingData.getOrderShippingList();
-		try {
-			for (OrderShipping orderShipping : orderShippingList) {
-				System.out.println("CSVファイルのインポートが完了。");
-				Order order = new Order();
-				order.setPaymentStatus("発送完了");
-				order.setId((long)orderShipping.getOrderId());
-				orderRepository.save(order);
-				OrderDelivery orderDelivery = new OrderDelivery();
-				orderDelivery.setId((long)orderShipping.getOrderId());
-				orderDelivery.setShippingCode(orderShipping.getShippingCode());
-				orderDelivery.setShippingDate(orderShipping.getShippingDate());
-				orderDelivery.setDeliveryDate(orderShipping.getDeliveryDate());
-				orderDelivery.setDeliveryTimeZone(orderShipping.getDeliveryTimeZone());
-				orderDeliveryRepository.save(orderDelivery);
-				orderShippingList.get(count).setUploadStatus("success");
-				count++;
+		// CSVの行数分ループ
+		for (OrderShipping orderShipping : orderShippingList) {
+			try {
+				// チェックボックスがチェックされているかチェック
+				if (orderShipping.getChecked()) {
+					// orderShippingのorderIdから紐づくorderを取得
+					Order order = orderRepository.findById((long)orderShipping.getOrderId()).get();
+					System.out.println(order.getStatusName());
+					// 発送済み以外の場合のみ更新
+					if (!(order.getStatusName() == "発送済み")) {
+						OrderDelivery orderDelivery = new OrderDelivery();
+						// orderに紐づいたorderDeliveryを作成
+						orderDelivery.setShippingCode(orderShipping.getShippingCode());
+						orderDelivery.setShippingDate(orderShipping.getShippingDate());
+						orderDelivery.setDeliveryDate(orderShipping.getDeliveryDate());
+						orderDelivery.setDeliveryTimeZone(orderShipping.getDeliveryTimeZone());
+						orderDeliveryRepository.save(orderDelivery);
+						order.getOrderDelivery().add(orderDelivery);
+						var orderStatus = OrderStatus.SHIPPED;
+						order.setStatus(orderStatus);
+						orderRepository.save(order);
+						// 成功を画面に表示するためにsuccessをセット
+						orderShippingList.get(count).setUploadStatus("success");
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				// 失敗を画面に表示するためにerrorをセット
+				orderShippingList.get(count).setUploadStatus("error");
 			}
-			orderShippingData.setOrderShipping(orderShippingList);
-		} catch (Exception e) {
-			// TODO: handle exception
-			orderShippingList.get(count).setUploadStatus("error");
+			count++;
 		}
-		return orderShippingData;
+		// uploadStatusをセットしたorderShippingListをコントローラークラスへ戻す
+		OrderShippingData returnOrderShippingData = new OrderShippingData();
+		returnOrderShippingData.setOrderShipping(orderShippingList);
+		return returnOrderShippingData;
 	}
-
-	// /**
-	// * 一括ステータス更新処理 更新前にステータスをチェックする
-	// *
-	// * @param idList 更新対象IDリスト
-	// * @param nexStatus 更新後ステータス
-	// * @throws Exception
-	// */
-	// @Transactional(readOnly = false, rollbackFor = RuntimeException.class)
-	// public void bulkStatusUpdate(List<Long> idList, OrderStatus nexStatus) throws
-	// Exception {
-	// try {
-
-	// for (Long id : idList) {
-	// Campaign campaign = campaignRepository.findById(id).get();
-	// OrderShipping.setStatus(nexStatus);
-	// orderRepository.save(campaign);
-	// }
-	// } catch (RuntimeException e) {
-	// throw new Exception(e.getMessage());
-	// }
-	// }
-
 }

@@ -11,7 +11,7 @@ public class OrderShipping {
 	private boolean checked;
 	private String uploadStatus;
 
-	// コンストラクタ
+	// CSV用コンストラクタ
 	public OrderShipping(Integer orderId, String shippingCode, LocalDate shippingDate, LocalDate deliveryDate,
 			String deliveryTimeZone, String uploadStatus, boolean checked) {
 		this.orderId = orderId;
@@ -22,6 +22,9 @@ public class OrderShipping {
 		this.uploadStatus = uploadStatus;
 		this.checked = true;
 	}
+
+	// HTMLよりオブジェクトを受け取るためのコンストラクタ
+	public OrderShipping() {}
 
 	// ゲッターとセッター
 	public Integer getOrderId() {
@@ -64,7 +67,7 @@ public class OrderShipping {
 		this.deliveryTimeZone = deliveryTimeZone;
 	}
 
-	public boolean isChecked() {
+	public boolean getChecked() {
 		return checked;
 	}
 

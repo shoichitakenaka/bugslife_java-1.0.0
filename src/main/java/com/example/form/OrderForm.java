@@ -1,7 +1,7 @@
 package com.example.form;
 
-import java.util.List;
 import java.sql.Timestamp;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

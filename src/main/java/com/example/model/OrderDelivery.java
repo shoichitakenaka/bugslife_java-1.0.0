@@ -20,9 +20,6 @@ public class OrderDelivery {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	// @Column(name = "order_id", nullable = false)
-	// private Long orderId;
-
 	@Column(name = "shipping_code", nullable = false)
 	private String shippingCode;
 
@@ -34,8 +31,6 @@ public class OrderDelivery {
 
 	@Column(name = "delivery_time_zone", nullable = false)
 	private String deliveryTimezone;
-
-	// コンストラクタ、ゲッター、セッターなど必要なメソッドを追加できます
 
 	public OrderDelivery() {}
 
@@ -55,14 +50,6 @@ public class OrderDelivery {
 	public void setId(Long id) {
 		this.id = id;
 	}
-
-	// public Long getOrderId() {
-	// return orderId;
-	// }
-
-	// public void setOrderId(Long orderId) {
-	// this.orderId = orderId;
-	// }
 
 	public String getShippingCode() {
 		return shippingCode;
