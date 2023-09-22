@@ -8,29 +8,28 @@
   <form id="category-form" th:action="@{/categories}" th:method="@{${category.id == null} ? 'post' : 'put'}"
     th:object="${category}">
     <input type="hidden" th:field="*{id}" />
+
     <div class="form-group">
       <label for="code">コード</label>
       <input id="code" name="code" type="text" class="form-control" th:field="*{code}" />
-      <span id="codeError" class="error" style="color: red;"></span>
     </div>
     <div class="form-group">
       <label for="name">名前</label>
       <input id="name" name="name" type="text" class="form-control" th:field="*{name}" />
-      <span id="nameError" class="error" style="color: red;"></span>
     </div>
     <div class="form-group">
       <label for="display_order">表示順</label>
-      <input id="display_order" name="display_order" class="form-control" th:field="*{displayOrder}" />
-      <span id="displayError" class="error" style="color: red;"></span>
+      <input id="display_order" name="display_order" type="number" class="form-control" th:field="*{displayOrder}" />
     </div>
     <div class="form-group">
       <label>説明</label>
-      <textarea id="description" name="description" class="form-control"></textarea>
-      <span id="descriptionError" class="error" style="color: red;"></span>
+      <textarea class="form-control" maxlength="300"></textarea>
     </div>
+
     <input id="submit" type="submit" class="btn btn-success" value="保存">
     <a th:href="@{/categories}" class="btn btn-default btn-secondary">戻る</a>
   </form>
 </th:block>
+
 </html>
 <script src="/js/category/category-form.js"></script>
