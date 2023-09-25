@@ -1,6 +1,7 @@
 package com.example.model;
 
 import java.io.Serializable;
+import java.lang.String;
 import java.util.List;
 
 import com.example.enums.OrderStatus;
