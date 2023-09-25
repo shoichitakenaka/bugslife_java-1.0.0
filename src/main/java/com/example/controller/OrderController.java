@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +32,6 @@ import com.example.enums.PaymentMethod;
 import com.example.enums.PaymentStatus;
 import com.example.form.OrderForm;
 import com.example.model.Order;
-import com.example.model.OrderShipping;
 import com.example.model.OrderShippingData;
 import com.example.service.OrderService;
 import com.example.service.ProductService;
@@ -50,9 +48,6 @@ public class OrderController {
 
 	@Autowired
 	private ProductService productService;
-
-	@Autowired
-	public OrderShippingData orderShippingData;
 
 	@GetMapping
 	public String index(Model model) {
@@ -180,9 +175,8 @@ public class OrderController {
 			return "redirect:/orders/shipping";
 		}
 		try {
-			List<OrderShipping> orderShippingList = new ArrayList<OrderShipping>();
-			orderShippingList = orderService.importCSV(uploadFile);
-			orderShippingData.setOrderShipping(orderShippingList);
+			OrderShippingData orderShippingData = new OrderShippingData();
+			orderShippingData.setOrderShipping(orderService.importCSV(uploadFile));
 			model.addAttribute("orderShippingData", orderShippingData);
 		} catch (OrderShippingValidator e) {
 			// 取り込み失敗した場合
@@ -200,8 +194,9 @@ public class OrderController {
 	@PutMapping("/shipping")
 	public String OrderSave(@ModelAttribute OrderShippingData orderShippingData, Model model) {
 		try {
-			orderShippingData = orderService.OrderSave(orderShippingData);
-			model.addAttribute("orderShippingData", orderShippingData);
+			OrderShippingData returnOrderShippingData = new OrderShippingData();
+			returnOrderShippingData = orderService.OrderSave(orderShippingData);
+			model.addAttribute("orderShippingData", returnOrderShippingData);
 			System.out.println("CSVファイルのインポートが");
 		} catch (Exception e) {
 			// TODO: handle exception

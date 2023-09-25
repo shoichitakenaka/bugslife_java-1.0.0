@@ -183,39 +183,24 @@ public class OrderService {
 			while ((line = br.readLine()) != null) {
 				try {
 					final String[] split = line.replace("\"", "").split(",");
-					final OrderShipping orderShipping = new OrderShipping(Integer.parseInt(split[0]), split[1],
-							LocalDate.parse(split[2]), LocalDate.parse(split[3]), split[4], null, true);
-					orderShippingList.add(orderShipping);
-
-				} catch (NumberFormatException | DateTimeParseException e) {
+					if (split.length >= 5 &&
+							split[0] != null &&
+							split[1] != null &&
+							split[2] != null &&
+							split[3] != null &&
+							split[4] != null &&
+							Integer.parseInt(split[0]) >= 1) {
+						final OrderShipping orderShipping = new OrderShipping(Integer.parseInt(split[0]), split[1],
+								LocalDate.parse(split[2]), LocalDate.parse(split[3]), split[4], null, true);
+						orderShippingList.add(orderShipping);
+					} else {
+						validationError.add(csvLine + "行目が不正です");
+					}
+				} catch (NumberFormatException | DateTimeParseException | ArrayIndexOutOfBoundsException e) {
 					// エラーがあった場合、エラーを受け取る
 					validationError.add(csvLine + "行目が不正です");
 				}
 				csvLine++;
-			}
-			int count = 1;
-			for (OrderShipping orderShipping : orderShippingList) {
-				// validation処理 keyに値があるかチェック
-				if (orderShipping.getOrderId() == null || !(orderShipping.getOrderId() instanceof Integer)) {
-					validationError.add(count + "行目のorderIdが不正です。");
-				}
-				if (orderShipping.getShippingCode() == null
-						|| !(orderShipping.getShippingCode() instanceof String)) {
-					validationError.add(count + "行目shippingCodeが不正です。");
-				}
-				if (orderShipping.getShippingDate() == null
-						|| !(orderShipping.getShippingDate() instanceof LocalDate)) {
-					validationError.add(count + "行目shippingDateが不正です。");
-				}
-				if (orderShipping.getDeliveryDate() == null
-						|| !(orderShipping.getDeliveryDate() instanceof LocalDate)) {
-					validationError.add(count + "行目deliveryDateが不正です。");
-				}
-				if (orderShipping.getDeliveryTimeZone() == null
-						|| !(orderShipping.getDeliveryTimeZone() instanceof String)) {
-					validationError.add(count + "行目deliveryTimeZoneが不正です。");
-				}
-				count++;
 			}
 			if (!validationError.isEmpty()) {
 				throw new OrderShippingValidator(validationError);
