@@ -14,8 +14,8 @@
         <!-- CSVの読み込み -->
         <form
           class="row col-6"
-          th:action="@{/orders/shipping}"
-          method="post"
+          th:action="@{/orders/shipping/upload_file}"
+          th:method="post"
           enctype="multipart/form-data"
         >
           <div class="input-group">
@@ -55,7 +55,7 @@
       <!-- チェックを入れたデータのみ出荷済みに更新する -->
       <form
         th:action="@{/orders/shipping}"
-        th:method="'put'"
+        th:method="put"
         th:object="${orderShippingData}"
       >
         <button type="submit" class="btn btn-success">出荷情報更新</button>
@@ -110,11 +110,11 @@
               </td>
               <td>
                 <th:block
-                  th:text="${orderShipping.deliveryTimezone}"
+                  th:text="${orderShipping.deliveryTimeZone}"
                 ></th:block>
                 <input
                   type="hidden"
-                  th:field="*{orderShippingList[__${st.index}__].deliveryTimezone}"
+                  th:field="*{orderShippingList[__${st.index}__].deliveryTimeZone}"
                 />
               </td>
               <td>
@@ -127,6 +127,11 @@
                   class="badge text-bg-success"
                   th:if="${orderShipping.uploadStatus == 'success'}"
                   >成功</span
+                >
+                <span
+                  class="badge text-bg-info"
+                  th:unless="${orderShipping.uploadStatus == 'error' or orderShipping.uploadStatus == 'success'}"
+                  >未更新</span
                 >
               </td>
             </tr>
