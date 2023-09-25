@@ -14,8 +14,8 @@
         <!-- CSVの読み込み -->
         <form
           class="row col-6"
-          th:action="@{/orders/shipping/upload_file}"
-          th:method="post"
+          th:action="@{/orders/shipping}"
+          method="post"
           enctype="multipart/form-data"
         >
           <div class="input-group">
@@ -55,7 +55,7 @@
       <!-- チェックを入れたデータのみ出荷済みに更新する -->
       <form
         th:action="@{/orders/shipping}"
-        th:method="put"
+        th:method="'put'"
         th:object="${orderShippingData}"
       >
         <button type="submit" class="btn btn-success">出荷情報更新</button>

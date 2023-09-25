@@ -166,7 +166,7 @@ public class OrderController {
 	 * @param redirectAttributes
 	 * @return
 	 */
-	@PostMapping("/shipping/upload_file")
+	@PostMapping("/shipping")
 	public String uploadFile(@RequestParam("file") MultipartFile uploadFile,
 			RedirectAttributes redirectAttributes, Model model) {
 		if (uploadFile.isEmpty()) {
