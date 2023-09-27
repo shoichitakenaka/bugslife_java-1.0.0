@@ -192,15 +192,15 @@ public class OrderController {
 
 	// インポートしたCSVファイルをDBに保存する
 	@PutMapping("/shipping")
-	public String OrderSave(@ModelAttribute OrderShippingData orderShippingData, Model model) {
+	public String OrderSave(@ModelAttribute OrderShippingData orderShippingData, Model model,
+			RedirectAttributes redirectAttributes) {
 		try {
 			OrderShippingData returnOrderShippingData = new OrderShippingData();
 			returnOrderShippingData = orderService.OrderSave(orderShippingData);
 			model.addAttribute("orderShippingData", returnOrderShippingData);
-			System.out.println("CSVファイルのインポートが");
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("error", "更新できませんでした。");
 		}
 		return "order/shipping";
 	}
@@ -225,6 +225,7 @@ public class OrderController {
 			os.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("error", e.getMessage());
 		}
 		return null;
 	}
